@@ -1,0 +1,166 @@
+{
+  "diskon": [
+    {
+    "id": "1",
+    "name": "Paracetamol 500mg",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/3/35/Paracetamol_500mg_bottle.jpg",
+    "discount": 20,
+    "price": 20000,
+    "discounted_price": 16000,
+    "dosage": "1 tablet setiap 6-8 jam"
+  },
+  {
+    "id": "2",
+    "name": "Ibuprofen 200mg",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/7/7c/Ibuprofen200mg.jpg",
+    "discount": 15,
+    "price": 25000,
+    "discounted_price": 21250,
+    "dosage": "1 tablet setiap 4-6 jam"
+  },
+  {
+    "id": "3",
+    "name": "Amoxicillin 500mg",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/6/62/Amoxicillin_500mg.jpg",
+    "discount": 25,
+    "price": 30000,
+    "discounted_price": 22500,
+    "dosage": "1 kapsul setiap 8 jam"
+  },
+  {
+    "id": "4",
+    "name": "Cetirizine 10mg",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/1/17/Cetirizine.jpg",
+    "discount": 10,
+    "price": 15000,
+    "discounted_price": 13500,
+    "dosage": "1 tablet per hari"
+  },
+  {
+    "id": "5",
+    "name": "Loratadine 10mg",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/3/32/Loratadine_10mg.jpg",
+    "discount": 30,
+    "price": 20000,
+    "discounted_price": 14000,
+    "dosage": "1 tablet per hari"
+  },
+  {
+    "id": "6",
+    "name": "Metformin 500mg",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/1/16/Metformin_500mg.jpg",
+    "discount": 20,
+    "price": 18000,
+    "discounted_price": 14400,
+    "dosage": "1 tablet dua kali sehari"
+  },
+  {
+    "id": "7",
+    "name": "Omeprazole 20mg",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/a/af/Omeprazole_20mg_capsule.jpg",
+    "discount": 18,
+    "price": 22000,
+    "discounted_price": 18040,
+    "dosage": "1 kapsul per hari sebelum makan"
+  },
+  {
+    "id": "8",
+    "name": "Simvastatin 20mg",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/2/29/Simvastatin_20mg.jpg",
+    "discount": 22,
+    "price": 24000,
+    "discounted_price": 18720,
+    "dosage": "1 tablet per hari"
+  },
+  {
+    "id": "9",
+    "name": "Aspirin 100mg",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/5/56/Aspirin_100mg.jpg",
+    "discount": 12,
+    "price": 17000,
+    "discounted_price": 14960,
+    "dosage": "1 tablet per hari"
+  },
+  {
+    "id": "10",
+    "name": "Azithromycin 500mg",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/6/68/Azithromycin_500mg.jpg",
+    "discount": 28,
+    "price": 35000,
+    "discounted_price": 25200,
+    "dosage": "1 tablet per hari selama 3 hari"
+  }
+  ],
+  "normal": [
+    {
+      "id": 11,
+      "name": "Vitamin C 500mg",
+      "image": "https://example.com/images/vitamin_c.jpg",
+      "price": 15000,
+      "dosage": "1 tablet per hari"
+    },
+    {
+      "id": 12,
+      "name": "Folic Acid 400mcg",
+      "image": "https://example.com/images/folic_acid.jpg",
+      "price": 12000,
+      "dosage": "1 tablet per hari"
+    },
+    {
+      "id": 13,
+      "name": "Vitamin D3 1000 IU",
+      "image": "https://example.com/images/vitamin_d3.jpg",
+      "price": 18000,
+      "dosage": "1 tablet per hari"
+    },
+    {
+      "id": 14,
+      "name": "Calcium Carbonate 500mg",
+      "image": "https://example.com/images/calcium_carbonate.jpg",
+      "price": 20000,
+      "dosage": "1 tablet dua kali sehari"
+    },
+    {
+      "id": 15,
+      "name": "Iron Supplement 65mg",
+      "image": "https://example.com/images/iron_supplement.jpg",
+      "price": 17000,
+      "dosage": "1 tablet per hari"
+    },
+    {
+      "id": 16,
+      "name": "Multivitamin",
+      "image": "https://example.com/images/multivitamin.jpg",
+      "price": 25000,
+      "dosage": "1 tablet per hari"
+    },
+    {
+      "id": 17,
+      "name": "Omega-3 Fish Oil",
+      "image": "https://example.com/images/omega_3.jpg",
+      "price": 30000,
+      "dosage": "1 kapsul per hari"
+    },
+    {
+      "id": 18,
+      "name": "Magnesium 250mg",
+      "image": "https://example.com/images/magnesium.jpg",
+      "price": 22000,
+      "dosage": "1 tablet per hari"
+    },
+    {
+      "id": 19,
+      "name": "Zinc 50mg",
+      "image": "https://example.com/images/zinc.jpg",
+      "price": 15000,
+      "dosage": "1 tablet per hari"
+    },
+    {
+      "id": 20,
+      "name": "Probiotics",
+      "image": "https://example.com/images/probiotics.jpg",
+      "price": 27000,
+      "dosage": "1 kapsul per hari"
+    }
+  ]
+}

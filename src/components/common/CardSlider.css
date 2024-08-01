@@ -1,0 +1,21 @@
+.container {
+    max-width: 30px;
+    padding: 0 15px;
+}
+
+.card-wrapper {
+    padding: 2px;
+}
+
+.slick-slide {
+    padding: 10px;
+}
+
+.slick-dots li button:before {
+    font-size: 0px;
+    color: gray;
+}
+
+.slick-dots li.slick-active button:before {
+    color: black;
+}
