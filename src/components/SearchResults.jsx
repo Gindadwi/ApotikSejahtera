@@ -1,66 +1,80 @@
 import React, { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { getDatabase, ref, onValue } from 'firebase/database';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
 
-const SearchResults = ({ searchTerm }) => {
-    const [searchResults, setSearchResults] = useState([]);
-    const [user, setUser] = useState(null);
-
-    useEffect(() => {
-        const auth = getAuth();
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-            setUser(user);
-        });
-        return () => unsubscribe();
-    }, []);
+const SearchResults = () => {
+    const location = useLocation(); // Hook untuk mengakses objek lokasi saat ini
+    const query = new URLSearchParams(location.search).get('query'); // Mengambil parameter 'query' dari URL
+    const [results, setResults] = useState([]); // State untuk menyimpan hasil pencarian
+    const [loading, setLoading] = useState(true); // State untuk menangani status pemuatan
 
     useEffect(() => {
-        if (!user) {
-            return;
-        }
+        const fetchResults = () => {
+            const db = getDatabase(); // Mendapatkan referensi ke Firebase Realtime Database
+            const drugsRef = ref(db, 'harganormal'); // Referensi ke path 'harganormal' di database
+            const discountDrugsRef = ref(db, 'diskonobat'); // Referensi ke path 'diskonobat' di database
 
-        const db = getDatabase();
-        const harganormalRef = ref(db, 'harganormal');
-        const diskonobatRef = ref(db, 'diskonobat');
+            let fetchedResults = []; // Array untuk menyimpan hasil yang diambil
 
-        const fetchData = () => {
-            let harganormalData = [];
-            let diskonobatData = [];
-
-            onValue(harganormalRef, (snapshot) => {
-                const dataHarganormal = snapshot.val();
-                if (dataHarganormal) {
-                    harganormalData = Object.values(dataHarganormal);
-                    onValue(diskonobatRef, (snapshot) => {
-                        const dataDiskonobat = snapshot.val();
-                        if (dataDiskonobat) {
-                            diskonobatData = Object.values(dataDiskonobat);
-                            const combinedData = [...harganormalData, ...diskonobatData];
-
-                            // Filter data based on searchTerm
-                            const filteredData = combinedData.filter((item) =>
-                                item.name.toLowerCase().includes(searchTerm.toLowerCase())
-                            );
-                            setSearchResults(filteredData);
-                        }
+            // Fungsi untuk mengambil data dari referensi tertentu
+            const fetchData = (reference) => {
+                return new Promise((resolve) => {
+                    onValue(reference, (snapshot) => {
+                        const data = snapshot.val(); // Mengambil snapshot data dari referensi
+                        resolve(data ? Object.values(data) : []); // Resolusi dengan array data atau kosong jika tidak ada data
                     });
+                });
+            };
+
+            // Mengambil data dari kedua referensi (obat normal dan diskon)
+            Promise.all([fetchData(drugsRef), fetchData(discountDrugsRef)]).then((values) => {
+                const [drugsData, discountDrugsData] = values; // Memisahkan hasil dari kedua referensi
+
+                // Memfilter data jika ada query, jika tidak tampilkan semua data
+                if (query && query.trim() !== "") {
+                    const filteredDrugs = drugsData.filter((drug) =>
+                        drug.name.toLowerCase().includes(query.toLowerCase())
+                    );
+                    const filteredDiscountDrugs = discountDrugsData.filter((drug) =>
+                        drug.name.toLowerCase().includes(query.toLowerCase())
+                    );
+
+                    fetchedResults = [...filteredDrugs, ...filteredDiscountDrugs]; // Gabungkan hasil filter
+                } else {
+                    fetchedResults = [...drugsData, ...discountDrugsData]; // Gabungkan semua data jika tidak ada query
                 }
+
+                setResults(fetchedResults); // Set hasil pencarian ke state
+                setLoading(false); // Set status pemuatan ke false
             });
         };
 
-        fetchData();
-    }, [searchTerm, user]);
+        fetchResults(); // Memanggil fungsi untuk mengambil hasil pencarian
+    }, [query]); // useEffect akan dipanggil ulang jika query berubah
 
     return (
-        <div>
-            {searchResults.length > 0 ? (
-                searchResults.map(item => (
-                    <div key={item.id}>
-                        {item.name}: {item.price}
-                    </div>
-                ))
-            ) : (
-                <p>No results found</p>
+        <div className="container mx-auto p-4">
+            <h2 className="text-2xl font-bold mb-4">Search Results</h2>
+            {loading ? ( // Menampilkan teks 'Loading...' jika data masih dimuat
+                <p>Loading...</p>
+            ) : results.length > 0 ? ( // Menampilkan hasil pencarian jika ada hasil
+                <ul>
+                    {results.map((result, index) => (
+                        <li key={index} className="mb-4">
+                            <div className="border p-4 rounded">
+                                <img src={result.image} alt={result.name} className="w-16 h-16" /> {/* Menampilkan gambar produk */}
+                                <h3 className="text-xl font-semibold">{result.name}</h3> {/* Menampilkan nama produk */}
+                                <p>{result.dosage}</p> {/* Menampilkan dosis produk */}
+                                <p>Price: {result.price}</p> {/* Menampilkan harga produk */}
+                                {result.discount && ( // Menampilkan harga diskon jika ada
+                                    <p>Discounted Price: {result.discounted_price}</p>
+                                )}
+                            </div>
+                        </li>
+                    ))}
+                </ul>
+            ) : ( // Menampilkan pesan 'No results found.' jika tidak ada hasil pencarian
+                <p>No results found.</p>
             )}
         </div>
     );
