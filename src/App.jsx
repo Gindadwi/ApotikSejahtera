@@ -12,6 +12,7 @@ import { CartProvider } from './components/common/CartContext'; // Import CartPr
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Obat from './pages/Obat';
+import SusuAD from './pages/susuAD';
 import SearchResults from './components/SearchResults';
 
 const App = () => {
@@ -29,6 +30,7 @@ const App = () => {
             <Route path="/checkout" element={<Checkout />} /> {/* Tambahkan ini */}
             <Route path="/Obat" element={<Obat/>} />
             <Route path="/search" element={<SearchResults />} />          
+            <Route path="/susuAD" element={<SusuAD />} />          
           </Routes>
           <ToastContainer />
         </div>

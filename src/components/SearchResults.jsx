@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { getDatabase, ref, onValue } from 'firebase/database';
+import Cardobat from '../components/common/Cardobat'
+import Card from '../components/common/Card'
 
 const SearchResults = () => {
     const location = useLocation(); // Hook untuk mengakses objek lokasi saat ini
@@ -53,24 +55,28 @@ const SearchResults = () => {
     }, [query]); // useEffect akan dipanggil ulang jika query berubah
 
     return (
-        <div className="container mx-auto p-4">
+        <div className="container mx-auto mt-0 lg:max-w-[720px] lg:w-full">
             <h2 className="text-2xl font-bold mb-4">Search Results</h2>
             {loading ? ( // Menampilkan teks 'Loading...' jika data masih dimuat
                 <p>Loading...</p>
             ) : results.length > 0 ? ( // Menampilkan hasil pencarian jika ada hasil
-                <ul>
-                    {results.map((result, index) => (
-                        <li key={index} className="mb-4">
-                            <div className="border p-4 rounded">
-                                <img src={result.image} alt={result.name} className="w-16 h-16" /> {/* Menampilkan gambar produk */}
-                                <h3 className="text-xl font-semibold">{result.name}</h3> {/* Menampilkan nama produk */}
-                                <p>{result.dosage}</p> {/* Menampilkan dosis produk */}
-                                <p>Price: {result.price}</p> {/* Menampilkan harga produk */}
-                                {result.discount && ( // Menampilkan harga diskon jika ada
-                                    <p>Discounted Price: {result.discounted_price}</p>
-                                )}
+                    <ul className='lg:grid lg:grid-cols-4 lg:gap-4 lg:mx-2'>
+                    {results.map((item, index) => (
+                        <>
+                            <div>
+                                <Card
+                                    cardClass='lg:w-[150px] lg:h-[185px]'
+                                    key={index}
+                                    title={item.name}
+                                    kegunaan={item.use}
+                                    hargadiskon={item.price}
+                                // onClick={() => handleClickModal(item)}
+                                />
                             </div>
-                        </li>
+
+
+                        </>
+
                     ))}
                 </ul>
             ) : ( // Menampilkan pesan 'No results found.' jika tidak ada hasil pencarian

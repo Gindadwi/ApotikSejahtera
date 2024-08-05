@@ -67,3 +67,7 @@ button:focus {
     cursor: pointer;
 }
 
+.custom-loader {
+    animation-duration: 12s;
+    /* Mengatur durasi animasi spinner menjadi 3 detik */
+}

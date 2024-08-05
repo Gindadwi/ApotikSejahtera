@@ -1,61 +1,64 @@
-import React, { useEffect, useState, useContext } from 'react';
 import axios from 'axios';
+import React, { useContext, useEffect, useState } from 'react';
+import Cardobat from '../components/common/Cardobat';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import Cardobat from './common/Cardobat';
 import Swal from 'sweetalert2';
-import Button from './common/Button';
-import { CartContext } from './common/CartContext';
-import { toast } from 'react-toastify';
-import { Navigate, useNavigate } from 'react-router-dom';
+import {toast} from 'react-toastify';
+import { CartContext } from '../components/common/CartContext';
 
-const Untukkamu = () => {
+const SusuAD = () => {
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [modalContent, setModalContent] = useState(null);
     const [user, setUser] = useState(null);
-    const { addToCart } = useContext(CartContext);
-    const Navigate = useNavigate();
-
-    const getKamu = async () => {
-        try {
-            const response = await axios.get('https://simple-notes-firebase-8e9dd-default-rtdb.firebaseio.com/harganormal.json?auth=lXYJqqYjWNufQN2OReTueq5MaI53zeEsIbXDh0zy');
-            const dataArray = Array.isArray(response.data)
-                ? response.data
-                : Object.keys(response.data).map(key => ({
-                    id: key,
-                    ...response.data[key]
-                }));
-            const limitedData = dataArray.slice(0, 8);
-            setData(limitedData);
-            console.log(response.data);
-        } catch (error) {
-            console.error('Error fetching data:', error);
-            setError(error);
-        } finally {
-            setLoading(() => setLoading(false), 8000);
-        }
-    };
+    const {addToCart} = useContext(CartContext)
 
     useEffect(() => {
+        const fetchSusu = async () => {
+            try {
+                const response = await axios.get('https://simple-notes-firebase-8e9dd-default-rtdb.firebaseio.com/susuAnakDewasa.json?auth=lXYJqqYjWNufQN2OReTueq5MaI53zeEsIbXDh0zy');
+                console.log('Data fetched from API', response.data);
+                const dataArray = Array.isArray(response.data) ? response.data : Object.values(response.data);                
+                setData(response.data);
+                setData(dataArray)
+            } catch (error) {
+                console.log('Error fetching data:', error);
+                setError(error);
+            } finally {
+                setLoading(() => setLoading(false), 8000);
+            }
+        };
+
+
         const auth = getAuth();
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                setUser(user);
+                setUser(user)
             } else {
                 setUser(null);
             }
         });
-        getKamu();
+
+
+        fetchSusu();
     }, []);
 
-    if (loading) return <p className='text-center font-poppins text-[18px] lg:text-[20px]'>Loading dulu gaes...</p>;
-    if (error) return <p>Error: {error.message}</p>;
+
+    
+    if (loading) {
+        return <div className='text-center font-poppins text-[18px] lg:text-[20px]'>Loading Dulu Gaes...</div>;
+    }
+
+    if (error) {
+        return <div>Error: {error.message}</div>;
+    }
+
 
     const handleClickModal = (item) => {
-        if (user) {
+        if(user){
             setModalContent(item);
-            const modal = new Modal(document.getElementById('skill-modal'));
+            const modal = Modal (document.getElementById('skill-modal'))
             modal.show();
         } else {
             Swal.fire({
@@ -64,32 +67,33 @@ const Untukkamu = () => {
                 text: 'Mohon login terlebih dahulu untuk bisa akses fitur lainya.',
                 customClass: {
                     confirmButton: 'swal2-confirm-custom'
-                }
-            });
+                } 
+            })
         }
-    };
+    }
 
     const closeModal = () => {
         setModalContent(null);
-        const modal = new Modal(document.getElementById('skill-modal'));
+        const modal = Modal(document.getElementById('skill-modal'))
         modal.hide();
-    };
+    }
+
+
 
     const handleAddToCart = (item) => {
         if (user) {
             addToCart(item);
-
             axios.post(`https://simple-notes-firebase-8e9dd-default-rtdb.firebaseio.com/cart/${user.uid}.json?auth=lXYJqqYjWNufQN2OReTueq5MaI53zeEsIbXDh0zy`, item)
-                .then(response => {
-                    console.log('Item added to cart in Firebase:', response.data);
-                })
-                .catch(error => {
-                    console.error('Error adding item to cart in Firebase:', error);
-                });
+            .then(response => {
+                console.log('Item added to cart in Firebase:', response.data);
+            })
+            .catch(error => {
+                console.error('Error adding item to cart in Firebase:', error);
+            });
 
             closeModal();
             toast.success("Item berhasil ditambahkan ke keranjang!");
-        } else {
+        }else{
             Swal.fire({
                 icon: 'error',
                 title: 'Harus Login!',
@@ -97,28 +101,28 @@ const Untukkamu = () => {
                 customClass: {
                     confirmButton: 'swal2-confirm-custom'
                 }
-            });
-        }
-    };
+            });        }
+    }
 
     return (
-        <div className='mt-5 container mx-auto lg:max-w-[720px] lg:w-full '>
+        <div className='mt-5 container mx-auto lg:max-w-[720px] lg:w-full'>
             <div>
-                <h1 className='text-center font font-baloo text-[20px] mb-5 lg:text-[24px]'>Untuk Kamu</h1>
+                <h1 className='text-center font-baloo text-[20px] lg:text-[26px]'>Susu Anak dan Dewasa</h1>
             </div>
 
-            <div className='flex items-center justify-center mr-2'>
-                <div className='grid grid-cols-2 gap-5 lg:grid-cols-4'>
+            <div className='flex gap-2 items-center justify-center flex-wrap'>
+                
+                <div className='grid grid-cols-2 gap-2 lg:grid-cols-4'>
                     {data.map(item => (
                         <Cardobat
                             key={item.id}
                             image={item.image}
                             title={item.name}
-                            kegunaan={item.use}
+                            kegunaan={item.description}
                             hargadiskon={item.price}
                             onClick={() => handleClickModal(item)}
                         />
-                    ))}
+                    ))}                
                 </div>
                 {modalContent && (
                     <div id="skill-modal" data-modal-backdrop="static" tabIndex="-1" aria-hidden="true" className="fixed bg-black bg-opacity-50 items-center justify-center flex top-0 left-0 right-0 z-50 w-full p-4 overflow-x-hidden overflow-y-auto h-modal md:h-full">
@@ -148,16 +152,8 @@ const Untukkamu = () => {
                     </div>
                 )}
             </div>
-            <div className='justify-center items-center flex '>
-                <Button
-                    name="Lihat Lebih Banyak"
-                    type='Button'
-                    className={'py-2 mt-5 lg:w-[250px] lg:h-[50px]'}
-                    onClick = {() => Navigate('/Obat')}
-                />
-            </div>
         </div>
     );
 };
 
-export default Untukkamu;
+export default SusuAD;
