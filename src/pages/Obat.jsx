@@ -79,13 +79,14 @@ export default function Obat() {
             axios.post(`https://simple-notes-firebase-8e9dd-default-rtdb.firebaseio.com/cart/${user.uid}.json?auth=lXYJqqYjWNufQN2OReTueq5MaI53zeEsIbXDh0zy`, item)
                 .then(response => {
                     console.log('Item added to cart in Firebase:', response.data);
+                    toast.success("Item berhasil ditambahkan ke keranjang!");
+
                 })
                 .catch(error => {
                     console.error('Error adding item to cart in Firebase:', error);
                 });
 
             closeModal();
-            toast.success("Item berhasil ditambahkan ke keranjang!");
         } else {
             Swal.fire({
                 icon: 'error',

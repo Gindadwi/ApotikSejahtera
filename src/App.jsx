@@ -13,6 +13,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Obat from './pages/Obat';
 import SusuAD from './pages/susuAD';
+import Vitamin from './pages/Vitamin';
 import SearchResults from './components/SearchResults';
 
 const App = () => {
@@ -31,6 +32,7 @@ const App = () => {
             <Route path="/Obat" element={<Obat/>} />
             <Route path="/search" element={<SearchResults />} />          
             <Route path="/susuAD" element={<SusuAD />} />          
+            <Route path="/vitamin" element={<Vitamin />} />          
           </Routes>
           <ToastContainer />
         </div>

@@ -24,7 +24,7 @@ const Rekomendasi = () => {
                 <div className='flex gap-2 rounded-lg  bg-rekomendasi p-2 lg:items-center lg:justify-center lg:gap-x-8 lg:py-4'>
                     <div className='row-span-5 gap-10'>
                         <h2 className='text-white font-baloo text-[12px] mt-1 lg:text-[20px] lg:mb-2'>Aneka Vitamin</h2>
-                        <button className='bg-white rounded-lg p-2 text-[10px] font-poppins mt-2 lg:px-12 lg:text-[12px] '>Lihat Semua</button>
+                        <button onClick={() => Navigate ('/vitamin')} className='bg-white rounded-lg p-2 text-[10px] font-poppins mt-2 lg:px-12 lg:text-[12px] '>Lihat Semua</button>
                     </div>
                     <div className='items-center justify-center flex '>
                         <img src={Vitamin} alt=""

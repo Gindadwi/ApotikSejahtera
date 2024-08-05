@@ -101,7 +101,8 @@ const SusuAD = () => {
                 customClass: {
                     confirmButton: 'swal2-confirm-custom'
                 }
-            });        }
+            });        
+        }
     }
 
     return (
