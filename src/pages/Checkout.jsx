@@ -1,81 +1,110 @@
-import React, { useContext, useEffect, useState } from 'react'; // Mengimpor React dan hook yang dibutuhkan
-import { CartContext } from '../components/common/CartContext.jsx'; // Mengimpor CartContext untuk mengakses konteks keranjang
-import { getAuth } from 'firebase/auth'; // Mengimpor fungsi otentikasi Firebase
-import axios from 'axios'; // Mengimpor Axios untuk melakukan permintaan HTTP
+import React, { useContext, useEffect, useState } from 'react';
+import { CartContext } from '../components/common/CartContext.jsx';
+import { getAuth } from 'firebase/auth';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const Checkout = () => {
-    const { cartItems, setCartItems } = useContext(CartContext); // Mengakses item keranjang dan fungsi untuk mengubahnya dari CartContext
-    const [cart, setCart] = useState([]); // Mengatur state untuk menyimpan item keranjang
-    const auth = getAuth(); // Mendapatkan instance otentikasi Firebase
-    const user = auth.currentUser; // Mendapatkan pengguna yang sedang masuk
+    const { cartItems, setCartItems } = useContext(CartContext);
+    const [cart, setCart] = useState([]);
+    const [selectedItems, setSelectedItems] = useState([]); // State untuk item yang dipilih
+    const auth = getAuth();
+    const user = auth.currentUser;
+    const navigate = useNavigate();
 
-    // useEffect untuk mengambil data keranjang dari Firebase saat komponen dimuat
     useEffect(() => {
         const fetchCartItems = async () => {
-            if (user) { // Jika pengguna ada (sudah masuk)
+            if (user) {
                 try {
-                    const idToken = await user.getIdToken(true); // Mendapatkan ID token untuk otorisasi
-                    const response = await axios.get(`https://simple-notes-firebase-8e9dd-default-rtdb.firebaseio.com/cart/${user.uid}.json?auth=lXYJqqYjWNufQN2OReTueq5MaI53zeEsIbXDh0zy`); // Melakukan permintaan GET untuk mendapatkan item keranjang
-                    if (response.data) { // Jika ada data yang diterima
+                    const idToken = await user.getIdToken(true);
+                    const response = await axios.get(`https://simple-notes-firebase-8e9dd-default-rtdb.firebaseio.com/cart/${user.uid}.json?auth=lXYJqqYjWNufQN2OReTueq5MaI53zeEsIbXDh0zy`);
+                    if (response.data) {
                         const fetchedCartItems = Object.keys(response.data).map(key => ({
                             firebaseId: key,
                             ...response.data[key]
-                        })); // Memetakan data yang diterima ke dalam array item keranjang
-                        setCart(fetchedCartItems); // Mengatur state keranjang dengan data yang diterima
+                        }));
+                        setCart(fetchedCartItems);
                     }
                 } catch (error) {
-                    console.error('Error fetching cart items:', error); // Menangani kesalahan jika terjadi
+                    console.error('Error fetching cart items:', error);
                 }
             }
         };
-        fetchCartItems(); // Memanggil fungsi untuk mengambil data keranjang
-    }, [user]); // useEffect akan dipanggil ulang jika user berubah
+        fetchCartItems();
+    }, [user]);
 
-    // Fungsi untuk menghapus item dari keranjang
     const handleClickDelete = async (firebaseId) => {
-        if (user) { // Jika pengguna ada (sudah masuk)
+        if (user) {
             try {
-                const idToken = await user.getIdToken(true); // Mendapatkan ID token untuk otorisasi
-                await axios.delete(`https://simple-notes-firebase-8e9dd-default-rtdb.firebaseio.com/cart/${user.uid}/${firebaseId}.json?auth=lXYJqqYjWNufQN2OReTueq5MaI53zeEsIbXDh0zy`); // Melakukan permintaan DELETE untuk menghapus item
-                const updatedItems = cart.filter(item => item.firebaseId !== firebaseId); // Menghapus item dari state keranjang
-                setCart(updatedItems); // Mengatur state keranjang dengan item yang diperbarui
+                const idToken = await user.getIdToken(true);
+                await axios.delete(`https://simple-notes-firebase-8e9dd-default-rtdb.firebaseio.com/cart/${user.uid}/${firebaseId}.json?auth=lXYJqqYjWNufQN2OReTueq5MaI53zeEsIbXDh0zy`);
+                const updatedItems = cart.filter(item => item.firebaseId !== firebaseId);
+                setCart(updatedItems);
                 console.log("Item berhasil dihapus dari Firebase dan UI");
             } catch (error) {
-                console.error("Tidak bisa menghapus item dari Firebase:", error); // Menangani kesalahan jika terjadi
+                console.error("Tidak bisa menghapus item dari Firebase:", error);
             }
         }
     };
 
+    const handleSelectItem = (item) => {
+        setSelectedItems(prevSelectedItems => {
+            if (prevSelectedItems.includes(item)) {
+                return prevSelectedItems.filter(selectedItem => selectedItem !== item);
+            } else {
+                return [...prevSelectedItems, item];
+            }
+        });
+    };
+
+    const handleCheckout = () => {
+        if (selectedItems.length > 0) {
+            navigate('/checkout', { state: { selectedItems } }); // Navigasi ke halaman checkout dengan item yang dipilih
+        } else {
+            alert('Pilih item yang ingin Anda checkout.');
+        }
+    };
+
     if (!user) {
-        return <p>Anda harus login untuk melihat data checkout.</p>; // Jika pengguna belum masuk, tampilkan pesan
+        return <p className="text-center mt-10">Anda harus login untuk melihat data checkout.</p>;
     }
 
     return (
-        <div className='container mx-auto'>
-            <h1 className='text-center font-baloo text-[24px]'>Keranjang Obat</h1>
-            <ul className='mt-5 container mx-auto lg:max-w-[720px] lg:w-full lg:grid lg:grid-cols-2'>
-                {cart.map(item => ( // Iterasi melalui item keranjang dan menampilkannya
-                    <li key={item.firebaseId}>
-                        <div className="justify-between items-center p-4 border-b shadow-md border border-gray-200 m-1 rounded-lg lg:max-w-[720px]">
-                            <div className='bg-gray-200 items-center justify-center p-4 rounded-lg'>
-                                <div className='flex lg:block lg:h-[230px]'>
-                                    <img src={item.image} alt={item.name} className="w-[200px] h-[100px] rounded object-cover" /> {/* Menampilkan gambar item */}
-                                    <div className="ml-4 lg:mt-3">
-                                        <h2 className='font-semibold font-poppins'>{item.name}</h2> {/* Menampilkan nama item */}
-                                        <p className='font-poppins text-[13px] lg:text-[18px]'>{item.use}</p> {/* Menampilkan kegunaan item */}
-                                    </div>
-                                </div>
-                                <div>
-                                    <p className='font-semibold text-red-700 font-poppins text-right lg:text-[18px]'>{item.price}</p> {/* Menampilkan harga item */}
+        <div className='container mx-auto p-5'>
+            <h1 className='text-center font-baloo text-[24px] lg:text-[36px] mb-5'>Keranjang Obat</h1>
+            <ul className='grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3'>
+                {cart.map(item => (
+                    <li key={item.firebaseId} className="bg-white border rounded-lg shadow-lg overflow-hidden">
+                        <div className="flex flex-col h-full">
+                            <div className="bg-gray-200 p-4 flex-shrink-0">
+                                <img src={item.image} alt={item.name} className="w-full h-48 object-cover rounded-lg" />
+                            </div>
+                            <div className="p-4 flex flex-col flex-grow">
+                                <h2 className='font-semibold font-poppins text-lg'>{item.name}</h2>
+                                <p className='font-poppins text-sm lg:text-base mt-2'>{item.use}</p>
+                                <p className='font-semibold text-red-700 font-poppins mt-auto text-right lg:text-lg'>{item.price}</p>
+                                <div className='mt-4'>
+                                    <label className='inline-flex items-center'>
+                                        <input
+                                            type='checkbox'
+                                            checked={selectedItems.includes(item)}
+                                            onChange={() => handleSelectItem(item)}
+                                            className='form-checkbox'
+                                        />
+                                        <span className='ml-2'>Pilih untuk checkout</span>
+                                    </label>
                                 </div>
                             </div>
-                            <div className='w-full flex justify-end'>
-                                <button onClick={() => handleClickDelete(item.firebaseId)} className='w-[150px] h-[35px] rounded-md bg-red-900 text-white font-poppins mt-5'>delete</button> {/* Tombol untuk menghapus item */}
+                            <div className='p-4 bg-gray-100 flex justify-end'>
+                                <button onClick={() => handleClickDelete(item.firebaseId)} className='px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition duration-300 font-poppins'>Delete</button>
                             </div>
                         </div>
                     </li>
                 ))}
             </ul>
+            <div className="flex justify-end mt-5">
+                <button onClick={handleCheckout} className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-300 font-poppins">Checkout</button>
+            </div>
         </div>
     );
 };

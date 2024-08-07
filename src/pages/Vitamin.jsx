@@ -127,26 +127,27 @@ const Vitamin = () => {
                   ))}
               </div>
               {modalContent && (
-                  <div id="skill-modal" data-modal-backdrop="static" tabIndex="-1" aria-hidden="true" className="fixed bg-black bg-opacity-50 items-center justify-center flex top-0 left-0 right-0 z-50 w-full p-4 overflow-x-hidden overflow-y-auto h-modal md:h-full">
+                  <div id="skill-modal" data-modal-backdrop="static" tabIndex="-1" aria-hidden="true" className="fixed bg-black bg-opacity-50 h-screen flex items-center justify-center top-0 left-0 right-0 z-50 w-full p-4 overflow-x-hidden overflow-y-auto  md:h-full">
                       <div className="relative w-full h-full max-w-2xl md:h-auto lg:w-[500px]">
-                          <div className="relative bg-white rounded-lg shadow">
-                              <div className="flex items-start justify-between p-4 border-b rounded-t dark:border-gray-600">
-                                  <button onClick={closeModal} type="button" className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white" data-modal-hide="skill-modal">
+                          <div className="relative bg-white rounded-lg shadow-lg">
+                              <div className="flex items-start justify-between p-4 border-b rounded-t dark:border-gray-600 bg-gradient-to-r from-blue-500 to-purple-500">
+                                  <h3 className="text-lg font-medium text-white">Product Details</h3>
+                                  <button onClick={closeModal} type="button" className="text-white bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white" data-modal-hide="skill-modal">
                                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
                                       </svg>
                                   </button>
                               </div>
                               <div className="p-6">
-                                  <p className="text-base mt-[-20px] leading-relaxed text-back font-poppins text-left dark:text-gray-400">
-                                      <img src={modalContent.image} alt={modalContent.name} />
+                                  <img className="w-full h-64 object-cover rounded-lg shadow-md" src={modalContent.image} alt={modalContent.name} />
+                                  <div className="mt-4">
                                       <p className='mt-4 font-poppins font-bold' >{modalContent.name}</p>
                                       <p className='mt-2 font-poppins'>Dosis Pemakaian Obat :</p>
                                       <p className='text-base font-poppins'>- {modalContent.dosage}</p>
                                       <p className='text-red-800 font-poppins font-semibold mt-4 text-end'>Rp {modalContent.price}</p>
-                                  </p>
-                                  <div className='items-end flex justify-end mt-5'>
-                                      <button onClick={() => handleAddToCart(modalContent)} className='px-8 bg-blue-600 w-[150px] h-[35px] rounded-lg text-white font-poppins text-center'>Keranjang</button>
+                                  </div>
+                                  <div className="flex justify-end mt-6">
+                                      <button onClick={() => handleAddToCart(modalContent)} className="px-8 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white font-poppins transition duration-300">Tambah ke Keranjang</button>
                                   </div>
                               </div>
                           </div>
