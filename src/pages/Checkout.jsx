@@ -1,112 +1,96 @@
-import React, { useContext, useEffect, useState } from 'react';
-import { CartContext } from '../components/common/CartContext.jsx';
+import React, { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { getAuth } from 'firebase/auth';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
 
-const Checkout = () => {
-    const { cartItems, setCartItems } = useContext(CartContext);
-    const [cart, setCart] = useState([]);
-    const [selectedItems, setSelectedItems] = useState([]); // State untuk item yang dipilih
+const CheckoutPage = () => {
+    const location = useLocation();
+    const selectedItems = location.state?.selectedItems || []; // Dapatkan item yang dipilih dari state navigasi
     const auth = getAuth();
     const user = auth.currentUser;
-    const navigate = useNavigate();
+    const [orderDetails, setOrderDetails] = useState({
+        address: '',
+        paymentMethod: 'credit_card',
+    });
 
-    useEffect(() => {
-        const fetchCartItems = async () => {
-            if (user) {
-                try {
-                    const idToken = await user.getIdToken(true);
-                    const response = await axios.get(`https://simple-notes-firebase-8e9dd-default-rtdb.firebaseio.com/cart/${user.uid}.json?auth=lXYJqqYjWNufQN2OReTueq5MaI53zeEsIbXDh0zy`);
-                    if (response.data) {
-                        const fetchedCartItems = Object.keys(response.data).map(key => ({
-                            firebaseId: key,
-                            ...response.data[key]
-                        }));
-                        setCart(fetchedCartItems);
-                    }
-                } catch (error) {
-                    console.error('Error fetching cart items:', error);
-                }
-            }
-        };
-        fetchCartItems();
-    }, [user]);
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setOrderDetails({ ...orderDetails, [name]: value });
+    };
 
-    const handleClickDelete = async (firebaseId) => {
+    const handlePlaceOrder = async () => {
         if (user) {
             try {
                 const idToken = await user.getIdToken(true);
-                await axios.delete(`https://simple-notes-firebase-8e9dd-default-rtdb.firebaseio.com/cart/${user.uid}/${firebaseId}.json?auth=lXYJqqYjWNufQN2OReTueq5MaI53zeEsIbXDh0zy`);
-                const updatedItems = cart.filter(item => item.firebaseId !== firebaseId);
-                setCart(updatedItems);
-                console.log("Item berhasil dihapus dari Firebase dan UI");
+                const order = {
+                    userId: user.uid,
+                    items: selectedItems,
+                    orderDetails,
+                    timestamp: new Date().toISOString(),
+                };
+                await axios.post(`https://simple-notes-firebase-8e9dd-default-rtdb.firebaseio.com/orders.json?auth=lXYJqqYjWNufQN2OReTueq5MaI53zeEsIbXDh0zy`, order);
+                alert('Order placed successfully!');
+                // Clear cart after placing order
             } catch (error) {
-                console.error("Tidak bisa menghapus item dari Firebase:", error);
+                console.error('Error placing order:', error);
             }
         }
     };
-
-    const handleSelectItem = (item) => {
-        setSelectedItems(prevSelectedItems => {
-            if (prevSelectedItems.includes(item)) {
-                return prevSelectedItems.filter(selectedItem => selectedItem !== item);
-            } else {
-                return [...prevSelectedItems, item];
-            }
-        });
-    };
-
-    const handleCheckout = () => {
-        if (selectedItems.length > 0) {
-            navigate('/checkout', { state: { selectedItems } }); // Navigasi ke halaman checkout dengan item yang dipilih
-        } else {
-            alert('Pilih item yang ingin Anda checkout.');
-        }
-    };
-
-    if (!user) {
-        return <p className="text-center mt-10">Anda harus login untuk melihat data checkout.</p>;
-    }
 
     return (
         <div className='container mx-auto p-5'>
-            <h1 className='text-center font-baloo text-[24px] lg:text-[36px] mb-5'>Keranjang Obat</h1>
-            <ul className='grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3'>
-                {cart.map(item => (
-                    <li key={item.firebaseId} className="bg-white border rounded-lg shadow-lg overflow-hidden">
-                        <div className="flex flex-col h-full">
-                            <div className="bg-gray-200 p-4 flex-shrink-0">
-                                <img src={item.image} alt={item.name} className="w-full h-48 object-cover rounded-lg" />
-                            </div>
-                            <div className="p-4 flex flex-col flex-grow">
-                                <h2 className='font-semibold font-poppins text-lg'>{item.name}</h2>
-                                <p className='font-poppins text-sm lg:text-base mt-2'>{item.use}</p>
-                                <p className='font-semibold text-red-700 font-poppins mt-auto text-right lg:text-lg'>{item.price}</p>
-                                <div className='mt-4'>
-                                    <label className='inline-flex items-center'>
-                                        <input
-                                            type='checkbox'
-                                            checked={selectedItems.includes(item)}
-                                            onChange={() => handleSelectItem(item)}
-                                            className='form-checkbox'
-                                        />
-                                        <span className='ml-2'>Pilih untuk checkout</span>
-                                    </label>
-                                </div>
-                            </div>
-                            <div className='p-4 bg-gray-100 flex justify-end'>
-                                <button onClick={() => handleClickDelete(item.firebaseId)} className='px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition duration-300 font-poppins'>Delete</button>
-                            </div>
-                        </div>
-                    </li>
-                ))}
-            </ul>
-            <div className="flex justify-end mt-5">
-                <button onClick={handleCheckout} className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-300 font-poppins">Checkout</button>
+            <h1 className='text-center font-baloo text-[24px] lg:text-[36px] mb-5'>Checkout</h1>
+            <div className='grid grid-cols-1 md:grid-cols-2 gap-5'>
+                <div className='bg-white border rounded-lg shadow-lg p-5'>
+                    <h2 className='font-semibold font-poppins text-lg mb-4'>Order Summary</h2>
+                    <ul>
+                        {selectedItems.map(item => (
+                            <li key={item.firebaseId} className="flex justify-between border-b py-2">
+                                <span>{item.name}</span>
+                                <span>{item.price}</span>
+                            </li>
+                        ))}
+                    </ul>
+                    <div className='flex justify-between mt-4 font-bold'>
+                        <span>Total</span>
+                        <span>{selectedItems.reduce((total, item) => total + parseFloat(item.price), 0)}</span>
+                    </div>
+                </div>
+                <div className='bg-white border rounded-lg shadow-lg p-5'>
+                    <h2 className='font-semibold font-poppins text-lg mb-4'>Shipping Details</h2>
+                    <div className='mb-4'>
+                        <label className='block text-gray-700'>Address</label>
+                        <input
+                            type='text'
+                            name='address'
+                            value={orderDetails.address}
+                            onChange={handleInputChange}
+                            className='w-full px-4 py-2 border rounded-lg'
+                        />
+                    </div>
+                    <div className='mb-4'>
+                        <label className='block text-gray-700'>Payment Method</label>
+                        <select
+                            name='paymentMethod'
+                            value={orderDetails.paymentMethod}
+                            onChange={handleInputChange}
+                            className='w-full px-4 py-2 border rounded-lg'
+                        >
+                            <option value='credit_card'>Credit Card</option>
+                            <option value='paypal'>PayPal</option>
+                            <option value='bank_transfer'>Bank Transfer</option>
+                        </select>
+                    </div>
+                    <button
+                        onClick={handlePlaceOrder}
+                        className='w-full py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-300 font-poppins'
+                    >
+                        Place Order
+                    </button>
+                </div>
             </div>
         </div>
     );
 };
 
-export default Checkout;
+export default CheckoutPage;

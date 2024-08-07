@@ -4,7 +4,7 @@ import { Route, Routes } from 'react-router-dom';
 import Register from './pages/Register';
 import Login from './pages/Login';
 import Home from './pages/Home';
-import Checkout from './pages/Checkout'; // Jangan lupa import Checkout page
+import Checkout from './pages/Keranjang'; // Jangan lupa import Checkout page
 import 'flowbite/dist/flowbite.css';
 import NavMenu from './components/NavMenu';
 import Footer from './components/Footer';
@@ -15,6 +15,7 @@ import Obat from './pages/Obat';
 import SusuAD from './pages/susuAD';
 import Vitamin from './pages/Vitamin';
 import SearchResults from './components/SearchResults';
+import CheckoutPage from './pages/checkout';
 
 const App = () => {
   return (
@@ -33,6 +34,7 @@ const App = () => {
             <Route path="/search" element={<SearchResults />} />          
             <Route path="/susuAD" element={<SusuAD />} />          
             <Route path="/vitamin" element={<Vitamin />} />          
+            <Route path="/CheckoutPage" element={<CheckoutPage />} />          
           </Routes>
           <ToastContainer />
         </div>
