@@ -15,7 +15,7 @@ import Obat from './pages/Obat';
 import SusuAD from './pages/susuAD';
 import Vitamin from './pages/Vitamin';
 import SearchResults from './components/SearchResults';
-import CheckoutPage from './pages/checkout';
+import CheckoutPage from './pages/Checkout';
 
 const App = () => {
   return (
