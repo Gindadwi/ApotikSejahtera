@@ -8,6 +8,11 @@ import { CartContext } from './common/CartContext';
 import { toast } from 'react-toastify';
 import { Navigate, useNavigate } from 'react-router-dom';
 
+// Fungsi untuk memformat angka menjadi format rupiah
+const formatRupiah = (angka) => {
+    return angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+};
+
 const Untukkamu = () => {
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -115,7 +120,7 @@ const Untukkamu = () => {
                             image={item.image}
                             title={item.name}
                             kegunaan={item.use}
-                            hargadiskon={item.price}
+                            hargadiskon={formatRupiah(item.price)}
                             onClick={() => handleClickModal(item)}
                         />
                     ))}
@@ -138,7 +143,7 @@ const Untukkamu = () => {
                                         <h4 className="text-2xl font-bold text-gray-900 font-poppins">{modalContent.name}</h4>
                                         <p className="mt-2 text-gray-700 font-poppins">Dosis Pemakaian Obat:</p>
                                         <p className="text-base text-gray-600 font-poppins">- {modalContent.dosage}</p>
-                                        <p className="text-red-600 font-semibold mt-4 text-lg text-right">Rp {modalContent.price}</p>
+                                        <p className="text-red-600 font-semibold mt-4 text-lg text-right">Rp {formatRupiah(modalContent.price)}</p>
                                     </div>
                                     <div className="flex justify-end mt-6">
                                         <button onClick={() => handleAddToCart(modalContent)} className="px-8 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white font-poppins transition duration-300">Tambah ke Keranjang</button>

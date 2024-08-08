@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react';
 import axios from 'axios';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import Swal from 'sweetalert2';
@@ -6,6 +6,15 @@ import { CartContext } from '../components/common/CartContext';
 import { toast } from 'react-toastify';
 import CardObat2 from '../components/common/CardObat2';
 import Cardobat from '../components/common/Cardobat';
+
+const formatRupiah = (angka) => {
+    if (typeof angka !== 'number') {
+        console.error('Invalid input for formatRupiah:', angka);
+        return '';
+    }
+    return angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+};
+
 
 export default function Obat() {
     const [user, setUser] = useState(null);
@@ -19,57 +28,38 @@ export default function Obat() {
         try {
             const [response1, response2] = await Promise.all([
                 axios.get('https://simple-notes-firebase-8e9dd-default-rtdb.firebaseio.com/harganormal.json?auth=lXYJqqYjWNufQN2OReTueq5MaI53zeEsIbXDh0zy'),
-                axios.get('https://simple-notes-firebase-8e9dd-default-rtdb.firebaseio.com/diskonobat.json?auth=lXYJqqYjWNufQN2OReTueq5MaI53zeEsIbXDh0zy')
-            ]);
+                axios.get('https://simple-notes-firebase-8e9dd-default-rtdb.firebaseio.com/diskonobat.json?auth=lXYJqqYjWNufQN2OReTueq5MaI53zeEsIbXDh0zy')            ]);
 
-            // Handling response from first API
-            const dataArray1 = Array.isArray(response1.data)
-                ? response1.data
-                : Object.keys(response1.data).map(key => ({
+            const formatData = (data) => Array.isArray(data)
+                ? data
+                : Object.keys(data).map(key => ({
                     id: key,
-                    ...response1.data[key]
+                    ...data[key]
                 }));
-            const limiterData1 = dataArray1.slice(0, 8);
 
-            // Handling response from second API
-            const dataArray2 = Array.isArray(response2.data)
-                ? response2.data
-                : Object.keys(response2.data).map(key => ({
-                    id: key,
-                    ...response2.data[key]
-                }));
-            const limiterData2 = dataArray2.slice(0, 8);
+            setHarganormal(formatData(response1.data).slice(0, 8));
+            setDiskonobat(formatData(response2.data).slice(0, 8));
 
-            // Update state with the separated data
-            setHarganormal(limiterData1);
-            setDiskonobat(limiterData2);
-
-            console.log('Response from first API:', response1.data);
-            console.log('Response from second API:', response2.data);
         } catch (error) {
-            console.log('Error fetching data', error);
+            console.error('Error fetching data:', error);
+            toast.error('Terjadi kesalahan saat mengambil data.');
         }
     };
 
-    // Jika user mau memunculkan modal harus login terlebih dahulu
     useEffect(() => {
         const auth = getAuth();
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                setUser(user);
-            } else {
-                setUser(null)
-            }
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+            setUser(user || null);
         });
+
         getObat();
+
+        return () => unsubscribe();
     }, []);
 
-    // Memunculkan Modal Content
     const handleClickModal = (item) => {
         if (user) {
             setModalContent(item);
-            const modal = new Modal(document.getElementById('skill-modal'));
-            modal.show();
         } else {
             Swal.fire({
                 icon: 'error',
@@ -80,31 +70,25 @@ export default function Obat() {
                 }
             });
         }
-    }
+    };
 
-    // Menutup Modal Content
     const closeModal = () => {
         setModalContent(null);
-        const modal = new Modal(document.getElementById('skill-modal'));
-        modal.hide();
-    }
+    };
 
-    // Menambahkan ke keranjang
     const handleAddToCart = (item) => {
         if (user) {
             addToCart(item);
-
             axios.post(`https://simple-notes-firebase-8e9dd-default-rtdb.firebaseio.com/cart/${user.uid}.json?auth=lXYJqqYjWNufQN2OReTueq5MaI53zeEsIbXDh0zy`, item)
                 .then(response => {
                     console.log('Item added to cart in Firebase:', response.data);
                     toast.success("Item berhasil ditambahkan ke keranjang!");
-
+                    closeModal();
                 })
                 .catch(error => {
                     console.error('Error adding item to cart in Firebase:', error);
+                    toast.error('Gagal menambahkan item ke keranjang.');
                 });
-
-            closeModal();
         } else {
             Swal.fire({
                 icon: 'error',
@@ -127,7 +111,7 @@ export default function Obat() {
                         image={item.image}
                         title={item.name}
                         kegunaan={item.use}
-                        hargadiskon={item.price}
+                        hargadiskon={formatRupiah(item.price)}
                         onClick={() => handleClickModal(item)}
                     />
                 ))}
@@ -139,8 +123,8 @@ export default function Obat() {
                         title={item.name}
                         kegunaan={item.dosage}
                         diskon={item.discount}
-                        hargaasli={item.price}
-                        hargadiskon={item.discounted_price}
+                        hargaasli={formatRupiah(item.price)}
+                        hargadiskon={formatRupiah(item.discounted_price)}
                         onClick={() => handleClickModal(item)}
                     />
                 ))}
@@ -163,8 +147,8 @@ export default function Obat() {
                                     <h4 className="text-2xl font-bold text-gray-900 font-poppins">{modalContent.name}</h4>
                                     <p className="mt-2 text-gray-700 font-poppins">Dosis Pemakaian Obat:</p>
                                     <p className="text-base text-gray-600 font-poppins">- {modalContent.dosage}</p>
-                                    <p className="text-gray-700 line-through">Harga Normal: {modalContent.discounted_price}</p>
-                                    <p className="text-red-600 font-semibold mt-4 text-lg text-right">Rp {modalContent.price}</p>
+                                    <p className="text-gray-700 line-through">Harga Normal: {formatRupiah(modalContent.discounted_price)}</p>
+                                    <p className="text-red-600 font-semibold mt-4 text-lg text-right">Rp {formatRupiah(modalContent.price)}</p>
                                 </div>
                                 <div className="flex justify-end mt-6">
                                     <button onClick={() => handleAddToCart(modalContent)} className="px-8 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white font-poppins transition duration-300">Tambah ke Keranjang</button>
@@ -175,5 +159,5 @@ export default function Obat() {
                 </div>
             )}
         </div>
-    )
+    );
 }

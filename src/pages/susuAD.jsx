@@ -6,6 +6,12 @@ import Swal from 'sweetalert2';
 import {toast} from 'react-toastify';
 import { CartContext } from '../components/common/CartContext';
 
+// Fungsi untuk memformat angka menjadi format rupiah
+const formatRupiah = (angka) => {
+    return angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+};
+
+
 const SusuAD = () => {
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -86,13 +92,14 @@ const SusuAD = () => {
             axios.post(`https://simple-notes-firebase-8e9dd-default-rtdb.firebaseio.com/cart/${user.uid}.json?auth=lXYJqqYjWNufQN2OReTueq5MaI53zeEsIbXDh0zy`, item)
             .then(response => {
                 console.log('Item added to cart in Firebase:', response.data);
+                toast.success("Item berhasil ditambahkan ke keranjang!");
+
             })
             .catch(error => {
                 console.error('Error adding item to cart in Firebase:', error);
             });
 
             closeModal();
-            toast.success("Item berhasil ditambahkan ke keranjang!");
         }else{
             Swal.fire({
                 icon: 'error',
@@ -120,7 +127,7 @@ const SusuAD = () => {
                             image={item.image}
                             title={item.name}
                             kegunaan={item.description}
-                            hargadiskon={item.price}
+                            hargadiskon={formatRupiah(item.price)}
                             onClick={() => handleClickModal(item)}
                         />
                     ))}                
@@ -144,7 +151,7 @@ const SusuAD = () => {
                                         <p className='mt-4 font-poppins font-bold lg:text-2xl' >{modalContent.name}</p>
                                         <p className='mt-2 font-poppins'>Dosis Pemakaian Obat :</p>
                                         <p className='text-base font-poppins'>- {modalContent.dosage}</p>
-                                        <p className='text-red-800 font-poppins font-semibold mt-4 text-end'>Rp {modalContent.price}</p>
+                                        <p className='text-red-800 font-poppins font-semibold mt-4 text-end'>Rp {formatRupiah(modalContent.price)}</p>
                                     </div>
                                     <div className="flex justify-end mt-6">
                                         <button onClick={() => handleAddToCart(modalContent)} className="px-8 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white font-poppins transition duration-300">Tambah ke Keranjang</button>

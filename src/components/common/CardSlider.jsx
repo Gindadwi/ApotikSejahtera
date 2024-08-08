@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useContext } from 'react';
 import axios from 'axios';
 import Slider from 'react-slick';
 import Card from './Card'; // Ensure the path is correct according to your project structure
@@ -7,6 +7,13 @@ import "slick-carousel/slick/slick-theme.css";
 import arrow from '../../assets/arrow.png';
 import Swal from 'sweetalert2'; // Import SweetAlert2
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { toast } from 'react-toastify';
+import { CartContext } from './CartContext';
+
+// Fungsi untuk memformat angka menjadi format rupiah
+const formatRupiah = (angka) => {
+    return angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+};
 
 const CardSlider = () => {
     const [data, setData] = useState([]);
@@ -14,6 +21,7 @@ const CardSlider = () => {
     const [user, setUser] = useState(null); // State for user authentication
     const sliderRef = useRef(null);
     const [modalContent, setModalContent] = useState(null);
+    const {addToCart} = useContext(CartContext);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -94,6 +102,33 @@ const CardSlider = () => {
         ]
     };
 
+
+    const handleAddToCart = (item) => {
+        if(user){
+            addToCart(item);
+            
+            axios.post(`https://simple-notes-firebase-8e9dd-default-rtdb.firebaseio.com/cart/${user.uid}.json?auth=lXYJqqYjWNufQN2OReTueq5MaI53zeEsIbXDh0zy`, item)
+            .then(response => {
+                console.log('Item added to cart in Firebase:', response.data);
+                toast.success("Item berhasil ditambahkan ke keranjang!");           
+            })
+
+            .catch(error => {
+                console.error('error lur', error);
+            });
+            closeModal();
+        }else{
+            Swal.fire({
+                icon: 'error',
+                title: 'Harus Login!',
+                text: 'Mohon login terlebih dahulu untuk bisa akses fitur lainya.',
+                customClass: {
+                    confirmButton: 'swal2-confirm-custom'
+                }
+            });
+        }
+    }
+
     return (
         <div className="container mx-auto mt-0 lg:max-w-[720px] lg:w-full relative">
             <Slider ref={sliderRef} {...settings}>
@@ -104,8 +139,8 @@ const CardSlider = () => {
                             image={data[key].image}
                             diskon={data[key].discount}
                             title={data[key].name}
-                            hargaasli={data[key].price}
-                            hargadiskon={data[key].discounted_price}
+                            hargaasli={formatRupiah(data[key].price)}
+                            hargadiskon={formatRupiah(data[key].discounted_price)}
                             onClick={() => handleClickModal(data[key])}
                         />
                     </div>
@@ -131,8 +166,8 @@ const CardSlider = () => {
                                     <h4 className="text-2xl font-bold text-gray-900 font-poppins">{modalContent.name}</h4>
                                     <p className="mt-2 text-gray-700 font-poppins">Dosis Pemakaian Obat:</p>
                                     <p className="text-base text-gray-600 font-poppins">- {modalContent.dosage}</p>
-                                    <p className="text-gray-700 line-through">Harga Normal: {modalContent.price}</p>
-                                    <p className="text-red-600 font-semibold mt-4 text-lg text-right">Rp {modalContent.discounted_price}</p>
+                                    <p className="text-gray-700 line-through">Harga Normal: {formatRupiah(modalContent.price)}</p>
+                                    <p className="text-red-600 font-semibold mt-4 text-lg text-right">Rp {formatRupiah(modalContent.discounted_price)}</p>
                                 </div>
                                 <div className="flex justify-end mt-6">
                                     <button onClick={() => handleAddToCart(modalContent)} className="px-8 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white font-poppins transition duration-300">Tambah ke Keranjang</button>

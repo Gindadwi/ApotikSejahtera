@@ -14,37 +14,53 @@ const Vitamin = () => {
     const [error, setError] = useState(null);
     const [modalContent, setModalContent] = useState(null);
     const [user, setUser] = useState(null);
-    const { addToCart } = useContext(CartContext)
+    const { addToCart } = useContext(CartContext);
+
+    // Fungsi untuk memformat angka menjadi format rupiah
+    const formatRupiah = (angka) => {
+        return angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    };
 
 
     useEffect(() => {
         const fetchSUSU = async () => {
             try {
+                // Mengambil data dari API menggunakan axios
                 const response = await axios.get('https://simple-notes-firebase-8e9dd-default-rtdb.firebaseio.com/susuAnakDewasa.json?auth=lXYJqqYjWNufQN2OReTueq5MaI53zeEsIbXDh0zy');
                 console.log('Data fetched from API', response.data);
-                const dataArray = Array.isArray(response.data) ? response.data : Object.values(response.data);                
+
+                // Memeriksa apakah response.data adalah array
+                const dataArray = Array.isArray(response.data) ? response.data : Object.values(response.data);
+
+                // Menyimpan data yang diterima ke state
                 setData(response.data)
                 setData(dataArray)
             } catch (error) {
+                // Menangkap dan menampilkan error jika terjadi
                 console.log('error lurd', error);
                 setError(error);
-            }finally{
+            } finally {
+                // Mengatur loading menjadi false setelah data diambil (dengan delay 8 detik)
                 setLoading(() => setLoading(false), 8000);
             }
         };
 
-        const auth = getAuth ();
-            onAuthStateChanged(auth, (user) => {
-                if(user) {
-                    setUser(user)
-                }else{
-                    setUser(null);
-                }
-            });
+        // Mengambil informasi pengguna yang sedang login
+        const auth = getAuth();
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // Jika ada pengguna yang login, simpan pengguna ke state
+                setUser(user);
+            } else {
+                // Jika tidak ada pengguna yang login, set pengguna menjadi null
+                setUser(null);
+            }
+        });
 
-
+        // Memanggil fungsi fetchSUSU untuk mengambil data
         fetchSUSU();
     }, []);
+
 
     if (loading) {
         return <div className='text-center font-poppins text-[18px] lg:text-[20px]'>Loading Dulu Gaes...</div>;
@@ -121,7 +137,7 @@ const Vitamin = () => {
                           image={item.image}
                           title={item.name}
                           kegunaan={item.description}
-                          hargadiskon={item.price}
+                          hargadiskon={formatRupiah(item.price)}
                           onClick={() => handleClickModal(item)}
                       />
                   ))}
@@ -144,7 +160,7 @@ const Vitamin = () => {
                                       <p className='mt-4 font-poppins font-bold' >{modalContent.name}</p>
                                       <p className='mt-2 font-poppins'>Dosis Pemakaian Obat :</p>
                                       <p className='text-base font-poppins'>- {modalContent.dosage}</p>
-                                      <p className='text-red-800 font-poppins font-semibold mt-4 text-end'>Rp {modalContent.price}</p>
+                                      <p className='text-red-800 font-poppins font-semibold mt-4 text-end'>Rp {formatRupiah(modalContent.price)}</p>
                                   </div>
                                   <div className="flex justify-end mt-6">
                                       <button onClick={() => handleAddToCart(modalContent)} className="px-8 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white font-poppins transition duration-300">Tambah ke Keranjang</button>

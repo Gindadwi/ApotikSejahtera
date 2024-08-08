@@ -20,7 +20,7 @@ const Cardobat = ({ image, diskon, title, hargaasli, hargadiskon, cardClass, keg
             </div>
 
             <div className='mx-3 mb-3'>
-                <h3 className='font-semibold font-poppins text-[14px] text-right text-red-700 shadow-sm'>Rp. {hargadiskon}</h3>
+                <h3 className='font-semibold font-poppins text-[14px] text-right text-red-700 shadow-sm'>Rp {hargadiskon}</h3>
             </div>
 
         </div>

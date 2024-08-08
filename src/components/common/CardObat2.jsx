@@ -20,8 +20,8 @@ const CardObat2 = ({ image, diskon, title, hargaasli, hargadiskon, cardClass, ke
             </div>
 
             <div className='mx-3 mb-3'>
-                <p className='text-[12px] text-right mt-2 line-through text-gray-500'>Rp. {hargaasli}</p>
-                <h3 className='font-semibold font-poppins text-[14px] text-right text-red-700 shadow-sm'>Rp. {hargadiskon}</h3>
+                <p className='text-[12px] text-right mt-2 line-through text-gray-500'>Rp {hargaasli}</p>
+                <h3 className='font-semibold font-poppins text-[14px] text-right text-red-700 shadow-sm'>Rp {hargadiskon}</h3>
             </div>
 
         </div>
