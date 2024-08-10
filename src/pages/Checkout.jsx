@@ -10,11 +10,13 @@ const numberToWords = (number) => {
     const tens = ['', '', 'dua puluh', 'tiga puluh', 'empat puluh', 'lima puluh', 'enam puluh', 'tujuh puluh', 'delapan puluh', 'sembilan puluh'];
     const thousands = ['', 'ribu', 'juta', 'miliar', 'triliun'];
 
+    // Jika angka yang diterima adalah 0, kembalikan teks 'nol rupiah'
     if (number === 0) return 'nol rupiah';
 
     let word = '';
     let i = 0;
 
+    // Looping untuk memecah angka menjadi kelompok ribuan dan mengonversinya ke teks
     while (number > 0) {
         let remainder = number % 1000;
 
@@ -45,23 +47,23 @@ const numberToWords = (number) => {
     return word.trim() + ' rupiah';
 };
 
-// Function to format number with periods every three digits
+// Fungsi untuk memformat angka dengan titik setiap tiga digit
 const formatNumber = (number) => {
     return number.toLocaleString('id-ID');
 };
 
-// Example usage
+// Contoh penggunaan fungsi formatNumber dan numberToWords
 const totalAmount = 120000;
-console.log(formatNumber(totalAmount)); // Outputs: 120.000
-console.log(numberToWords(totalAmount)); // Outputs: seratus dua puluh ribu rupiah
+console.log(formatNumber(totalAmount)); // Output: 120.000
+console.log(numberToWords(totalAmount)); // Output: seratus dua puluh ribu rupiah
 
-
-
+// Komponen utama halaman checkout
 const CheckoutPage = () => {
+    // Mengambil data yang dikirim melalui state menggunakan useLocation dari react-router-dom
     const location = useLocation();
-    const selectedItems = location.state?.selectedItems || [];
+    const selectedItems = location.state?.selectedItems || []; // Produk yang dipilih pengguna
     const auth = getAuth();
-    const user = auth.currentUser;
+    const user = auth.currentUser; // Mendapatkan pengguna yang sedang login
     const [orderDetails, setOrderDetails] = useState({
         nama: '',
         nomor: '',
@@ -69,23 +71,26 @@ const CheckoutPage = () => {
         paymentMethod: 'credit_card',
     });
 
+    // Fungsi untuk menangani perubahan input pada form
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setOrderDetails({ ...orderDetails, [name]: value });
     };
 
+    // Fungsi untuk menangani saat pengguna menekan tombol "Order Sekarang"
     const handlePlaceOrder = async () => {
         if (user) {
             try {
-                const idToken = await user.getIdToken(true);
+                const idToken = await user.getIdToken(true); // Mendapatkan token autentikasi pengguna
                 const order = {
-                    userId: user.uid,
-                    items: selectedItems,
-                    orderDetails,
-                    timestamp: new Date().toISOString(),
+                    userId: user.uid, // ID pengguna yang melakukan order
+                    items: selectedItems, // Produk yang dipesan
+                    orderDetails, // Detail pengiriman
+                    timestamp: new Date().toISOString(), // Waktu order
                 };
+                // Mengirim data order ke Firebase Realtime Database
                 await axios.post(`https://simple-notes-firebase-8e9dd-default-rtdb.firebaseio.com/orders.json?auth=lXYJqqYjWNufQN2OReTueq5MaI53zeEsIbXDh0zy`, order);
-                alert('Order placed successfully!');
+                alert('Order placed successfully!'); // Menampilkan pesan sukses
                 setOrderDetails({
                     nama: '',
                     nomor: '',
@@ -98,6 +103,7 @@ const CheckoutPage = () => {
         }
     };
 
+    // Menghitung total harga dari semua produk yang dipilih
     const totalAmount = selectedItems.reduce((total, item) => total + parseFloat(item.price), 0);
 
     return (
@@ -105,7 +111,7 @@ const CheckoutPage = () => {
             <h1 className='text-center font-baloo text-[24px] lg:text-[36px] mb-5'>Checkout</h1>
             <div className='grid grid-cols-1 md:grid-cols-2 gap-5'>
                 <div className='bg-white border rounded-lg shadow-lg p-5'>
-                    <h2 className='font-semibold font-poppins text-lg mb-4'>Order Summary</h2>
+                    <h2 className='font-semibold font-poppins text-lg mb-4'>Pesanan Kamu</h2>
                     <ul>
                         {selectedItems.map((item, index) => (
                             <li key={item.firebaseId || index} className="flex justify-between border-b py-2">
@@ -121,10 +127,9 @@ const CheckoutPage = () => {
                     <div className='mt-2 text-black lg:text-right font-poppins '>
                         <span>{numberToWords(totalAmount)}</span>
                     </div>
-
                 </div>
                 <div className='bg-white border rounded-lg shadow-lg p-5'>
-                    <h2 className='font-semibold font-poppins text-lg mb-4'>Shipping Details</h2>
+                    <h2 className='font-semibold font-poppins text-lg mb-4'>Detail Pengiriman</h2>
                     <div className='mb-4'>
                         <label className='block text-gray-700'>Nama Lengkap</label>
                         <input
@@ -156,23 +161,23 @@ const CheckoutPage = () => {
                         />
                     </div>
                     <div className='mb-4'>
-                        <label className='block text-gray-700'>Payment Method</label>
+                        <label className='block text-gray-700'>Metode Pembayaran</label>
                         <select
                             name='paymentMethod'
                             value={orderDetails.paymentMethod}
                             onChange={handleInputChange}
                             className='w-full px-4 py-2 border rounded-lg'
                         >
-                            <option value='credit_card'>Credit Card</option>
+                            <option value='credit_card'>Kartu Kredit</option>
                             <option value='paypal'>PayPal</option>
-                            <option value='bank_transfer'>Bank Transfer</option>
+                            <option value='bank_transfer'>Transfer Bank</option>
                         </select>
                     </div>
                     <button
                         onClick={handlePlaceOrder}
                         className='w-full py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-300 font-poppins'
                     >
-                        Place Order
+                        Order Sekarang
                     </button>
                 </div>
             </div>
