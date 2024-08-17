@@ -10,6 +10,15 @@ let coreApi = new midtransClient.CoreApi({
 
 exports.createTransaction = functions.https.onRequest((req, res) => {
     cors(req, res, async () => {
+        if (req.method === 'OPTIONS') {
+            // Menangani preflight request untuk CORS
+            res.set('Access-Control-Allow-Origin', 'https://apotik-sejahtera.vercel.app');
+            res.set('Access-Control-Allow-Methods', 'GET, POST');
+            res.set('Access-Control-Allow-Headers', 'Content-Type');
+            res.status(204).send('');
+            return;
+        }
+
         try {
             const { orderDetails, user, totalAmount } = req.body;
 
@@ -28,6 +37,7 @@ exports.createTransaction = functions.https.onRequest((req, res) => {
             };
 
             const transaction = await coreApi.charge(parameter);
+            res.set('Access-Control-Allow-Origin', 'https://apotik-sejahtera.vercel.app'); // Tambahkan header ini untuk respons utama
             res.json({ transaction });
         } catch (error) {
             console.error('Error creating transaction:', error);
