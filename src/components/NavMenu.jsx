@@ -148,7 +148,7 @@ const NavMenu = () => {
                         <div ref={dropdownRef} className='absolute z-10 bg-white divide-y divide-gray-100 rounded-lg shadow-lg border border-gray-200 w-[100px] top-14 right-3 dark:bg-gray-700 mt-1 lg:w-[150px] lg:right-[120px]'>
                             <ul className="py-2 text-sm text-gray-700 dark:text-gray-200">
                                 <li>
-                                    <button onClick={() => handleClickModal(<Login onLoginSuccess={handleLoginSuccess} />)} className="block font-poppins w-full px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Login</button> {/* Buka modal login */}
+                                    <button onClick={() => handleClickModal(<Login onLoginSuccess={handleLoginSuccess} closeModal={closeModal}/>)} className="block font-poppins w-full px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Login</button> {/* Buka modal login */}
                                 </li>
                                 <li>
                                     <button onClick={() => handleClickModal(<Register />)} className="block font-poppins w-full px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Register</button> {/* Buka modal register */}

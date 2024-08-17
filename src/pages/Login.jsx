@@ -1,10 +1,10 @@
 import { signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
 import React, { useState } from 'react';
 import { auth, googleProvider } from '../firebase';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 
-const Login = ({ onLoginSuccess }) => {
+const Login = ({ onLoginSuccess, closeModal }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState (false);
@@ -31,6 +31,11 @@ const Login = ({ onLoginSuccess }) => {
             console.error("Error logging in with Google:", error);
         }
     };
+
+    const handleLupaPassword = () => {
+        closeModal();
+        navigate('/LupaPassword')
+    }
 
     return (
         <div>
@@ -68,7 +73,7 @@ const Login = ({ onLoginSuccess }) => {
                     </div>
 
 
-                    <h3 className='text-blue-500 text-right text-sm' >Forgot password</h3>
+                    <h3 onClick={handleLupaPassword} className='text-blue-500 text-right text-sm' >Forgot password</h3>
 
                     <button type="submit" className="w-full p-2 bg-blue-500 text-white rounded-lg 
                     font-poppins ">

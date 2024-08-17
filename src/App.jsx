@@ -16,6 +16,7 @@ import SusuAD from './pages/susuAD';
 import Vitamin from './pages/Vitamin';
 import SearchResults from './components/SearchResults';
 import CheckoutPage from './pages/Checkout';
+import LupaPassword from './pages/LupaPassword'
 
 const App = () => {
   return (
@@ -34,7 +35,8 @@ const App = () => {
             <Route path="/search" element={<SearchResults />} />          
             <Route path="/susuAD" element={<SusuAD />} />          
             <Route path="/vitamin" element={<Vitamin />} />          
-            <Route path="/CheckoutPage" element={<CheckoutPage />} />          
+            <Route path="/CheckoutPage" element={<CheckoutPage />} />     
+            <Route path="/LupaPassword" element={<LupaPassword/>} />     
           </Routes>
           <ToastContainer />
         </div>

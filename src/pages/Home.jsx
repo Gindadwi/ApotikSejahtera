@@ -4,9 +4,14 @@ import CardSlider from '../components/common/CardSlider';
 import Rekomendasi from '../components/Rekomendasi';
 import Untukkamu from '../components/Untukkamu';
 
+
+
+
 const Home = () => {
 
   useEffect(() => {
+
+
     // Menambahkan script Tawk.to setelah komponen dirender
     var Tawk_API = Tawk_API || {}, Tawk_LoadStart = new Date();
     (function () {

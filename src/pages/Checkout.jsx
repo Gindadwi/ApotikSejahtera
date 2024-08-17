@@ -3,6 +3,10 @@ import { useLocation } from 'react-router-dom';
 import { getAuth } from 'firebase/auth';
 import axios from 'axios';
 
+// Memuat script Midtrans snap
+const snapSrc = 'https://app.sandbox.midtrans.com/snap/snap.js'; // URL script Midtrans
+const midtransClientKey = 'SB-Mid-client-tN5lJrODMKqfbgfh'; // Ganti dengan client key Anda
+
 // Fungsi untuk mengonversi angka menjadi teks dalam bahasa Indonesia
 const numberToWords = (number) => {
     const units = ['', 'satu', 'dua', 'tiga', 'empat', 'lima', 'enam', 'tujuh', 'delapan', 'sembilan'];
@@ -10,13 +14,11 @@ const numberToWords = (number) => {
     const tens = ['', '', 'dua puluh', 'tiga puluh', 'empat puluh', 'lima puluh', 'enam puluh', 'tujuh puluh', 'delapan puluh', 'sembilan puluh'];
     const thousands = ['', 'ribu', 'juta', 'miliar', 'triliun'];
 
-    // Jika angka yang diterima adalah 0, kembalikan teks 'nol rupiah'
     if (number === 0) return 'nol rupiah';
 
     let word = '';
     let i = 0;
 
-    // Looping untuk memecah angka menjadi kelompok ribuan dan mengonversinya ke teks
     while (number > 0) {
         let remainder = number % 1000;
 
@@ -52,58 +54,95 @@ const formatNumber = (number) => {
     return number.toLocaleString('id-ID');
 };
 
-// Contoh penggunaan fungsi formatNumber dan numberToWords
-const totalAmount = 120000;
-console.log(formatNumber(totalAmount)); // Output: 120.000
-console.log(numberToWords(totalAmount)); // Output: seratus dua puluh ribu rupiah
-
-// Komponen utama halaman checkout
 const CheckoutPage = () => {
-    // Mengambil data yang dikirim melalui state menggunakan useLocation dari react-router-dom
     const location = useLocation();
-    const selectedItems = location.state?.selectedItems || []; // Produk yang dipilih pengguna
+    const selectedItems = location.state?.selectedItems || [];
     const auth = getAuth();
-    const user = auth.currentUser; // Mendapatkan pengguna yang sedang login
+    const user = auth.currentUser;
     const [orderDetails, setOrderDetails] = useState({
         nama: '',
         nomor: '',
         alamat: '',
-        paymentMethod: 'credit_card',
+        paymentMethod: 'gopay', // Metode pembayaran default
     });
 
-    // Fungsi untuk menangani perubahan input pada form
+    // Fungsi untuk menangani perubahan input
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setOrderDetails({ ...orderDetails, [name]: value });
     };
 
-    // Fungsi untuk menangani saat pengguna menekan tombol "Order Sekarang"
+    // Fungsi untuk memproses pesanan
     const handlePlaceOrder = async () => {
         if (user) {
             try {
-                const idToken = await user.getIdToken(true); // Mendapatkan token autentikasi pengguna
                 const order = {
-                    userId: user.uid, // ID pengguna yang melakukan order
-                    items: selectedItems, // Produk yang dipesan
-                    orderDetails, // Detail pengiriman
-                    timestamp: new Date().toISOString(), // Waktu order
+                    user: {
+                        uid: user.uid,
+                        email: user.email
+                    },
+                    orderDetails,
+                    totalAmount: totalAmount,
                 };
-                // Mengirim data order ke Firebase Realtime Database
-                await axios.post(`https://simple-notes-firebase-8e9dd-default-rtdb.firebaseio.com/orders.json?auth=lXYJqqYjWNufQN2OReTueq5MaI53zeEsIbXDh0zy`, order);
-                alert('Order placed successfully!'); // Menampilkan pesan sukses
-                setOrderDetails({
-                    nama: '',
-                    nomor: '',
-                    alamat: '',
-                    paymentMethod: 'credit_card',
+
+                // Mendapatkan token dari Firebase Auth
+                const token = await user.getIdToken();
+
+                // Mengirim permintaan transaksi ke Firebase Cloud Function
+                const response = await axios.post(
+                    'https://simple-notes-firebase-8e9dd.cloudfunctions.net/createTransaction.json?auth=lXYJqqYjWNufQN2OReTueq5MaI53zeEsIbXDh0zy',
+                    order,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    }
+                );
+
+                const { snapToken } = response.data;
+
+                // Menjalankan pembayaran menggunakan snapToken
+                window.snap.pay(snapToken, {
+                    onSuccess: async function (result) {
+                        alert('Pembayaran berhasil!');
+
+                        // Menyimpan data pesanan ke Firebase Realtime Database
+                        await axios.post(
+                            `https://simple-notes-firebase-8e9dd-default-rtdb.firebaseio.com/orders.json?auth=lXYJqqYjWNufQN2OReTueq5MaI53zeEsIbXDh0zy ${token}`, // Ganti dengan URL database Anda
+                            {
+                                ...order,
+                                transactionStatus: 'completed',
+                                midtransTransactionId: result.transaction_id,
+                                timestamp: new Date().toISOString(),
+                            }
+                        );
+
+                        // Mengatur ulang detail pesanan
+                        setOrderDetails({
+                            nama: '',
+                            nomor: '',
+                            alamat: '',
+                            paymentMethod: 'credit_card',
+                        });
+                    },
+                    onPending: function (result) {
+                        alert('Pembayaran dalam proses');
+                    },
+                    onError: function (result) {
+                        alert('Pembayaran gagal');
+                    },
+                    onClose: function () {
+                        alert('Anda menutup jendela pembayaran');
+                    }
                 });
             } catch (error) {
-                console.error('Error placing order:', error);
+                console.error('Error placing order:', error.response || error.message || error);
+                alert('Terjadi kesalahan dalam proses transaksi');
             }
         }
     };
 
-    // Menghitung total harga dari semua produk yang dipilih
+    // Menghitung total jumlah harga dari item yang dipilih
     const totalAmount = selectedItems.reduce((total, item) => total + parseFloat(item.price), 0);
 
     return (
@@ -160,19 +199,6 @@ const CheckoutPage = () => {
                             className='w-full px-4 py-2 border rounded-lg'
                         />
                     </div>
-                    <div className='mb-4'>
-                        <label className='block text-gray-700'>Metode Pembayaran</label>
-                        <select
-                            name='paymentMethod'
-                            value={orderDetails.paymentMethod}
-                            onChange={handleInputChange}
-                            className='w-full px-4 py-2 border rounded-lg'
-                        >
-                            <option value='credit_card'>Kartu Kredit</option>
-                            <option value='paypal'>PayPal</option>
-                            <option value='bank_transfer'>Transfer Bank</option>
-                        </select>
-                    </div>
                     <button
                         onClick={handlePlaceOrder}
                         className='w-full py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-300 font-poppins'
@@ -181,6 +207,9 @@ const CheckoutPage = () => {
                     </button>
                 </div>
             </div>
+
+            {/* Menyertakan script Midtrans Snap */}
+            <script src={snapSrc} data-client-key={midtransClientKey}></script>
         </div>
     );
 };
