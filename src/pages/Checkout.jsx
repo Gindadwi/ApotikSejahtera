@@ -108,7 +108,7 @@ const CheckoutPage = () => {
 
                         // Menyimpan data pesanan ke Firebase Realtime Database
                         await axios.post(
-                            `https://simple-notes-firebase-8e9dd-default-rtdb.firebaseio.com/orders.json?auth=lXYJqqYjWNufQN2OReTueq5MaI53zeEsIbXDh0zy ${token}`, // Ganti dengan URL database Anda
+                            'https://simple-notes-firebase-8e9dd-default-rtdb.firebaseio.com/orders.json?auth=lXYJqqYjWNufQN2OReTueq5MaI53zeEsIbXDh0zy', // Ganti dengan URL database Anda
                             {
                                 ...order,
                                 transactionStatus: 'completed',
