@@ -1,6 +1,6 @@
 const functions = require('firebase-functions');
 const midtransClient = require('midtrans-client');
-const cors = require('cors')({ origin: true }); // Atur `origin` sesuai dengan kebutuhan
+const cors = require('cors')({ origin: 'https://apotik-sejahtera.vercel.app' }); // Batasi akses hanya dari domain ini
 
 let coreApi = new midtransClient.CoreApi({
     isProduction: false,
@@ -11,10 +11,10 @@ let coreApi = new midtransClient.CoreApi({
 exports.createTransaction = functions.https.onRequest((req, res) => {
     cors(req, res, async () => {
         if (req.method === 'OPTIONS') {
-            // Menangani preflight request untuk CORS
+            // Preflight request handling
             res.set('Access-Control-Allow-Origin', 'https://apotik-sejahtera.vercel.app');
-            res.set('Access-Control-Allow-Methods', 'GET, POST');
-            res.set('Access-Control-Allow-Headers', 'Content-Type');
+            res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+            res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
             res.status(204).send('');
             return;
         }
@@ -37,10 +37,11 @@ exports.createTransaction = functions.https.onRequest((req, res) => {
             };
 
             const transaction = await coreApi.charge(parameter);
-            res.set('Access-Control-Allow-Origin', 'https://apotik-sejahtera.vercel.app'); // Tambahkan header ini untuk respons utama
+            res.set('Access-Control-Allow-Origin', 'https://apotik-sejahtera.vercel.app');
             res.json({ transaction });
         } catch (error) {
             console.error('Error creating transaction:', error);
+            res.set('Access-Control-Allow-Origin', 'https://apotik-sejahtera.vercel.app');
             res.status(500).send('Transaction creation failed');
         }
     });
