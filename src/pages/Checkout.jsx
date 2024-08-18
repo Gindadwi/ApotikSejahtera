@@ -1,58 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { getAuth } from 'firebase/auth';
 import axios from 'axios';
 
-// Memuat script Midtrans snap
-const snapSrc = 'https://app.sandbox.midtrans.com/snap/snap.js'; // URL script Midtrans
-const midtransClientKey = 'SB-Mid-client-tN5lJrODMKqfbgfh'; // Ganti dengan client key Anda
-
-// Fungsi untuk mengonversi angka menjadi teks dalam bahasa Indonesia
-const numberToWords = (number) => {
-    const units = ['', 'satu', 'dua', 'tiga', 'empat', 'lima', 'enam', 'tujuh', 'delapan', 'sembilan'];
-    const teens = ['sepuluh', 'sebelas', 'dua belas', 'tiga belas', 'empat belas', 'lima belas', 'enam belas', 'tujuh belas', 'delapan belas', 'sembilan belas'];
-    const tens = ['', '', 'dua puluh', 'tiga puluh', 'empat puluh', 'lima puluh', 'enam puluh', 'tujuh puluh', 'delapan puluh', 'sembilan puluh'];
-    const thousands = ['', 'ribu', 'juta', 'miliar', 'triliun'];
-
-    if (number === 0) return 'nol rupiah';
-
-    let word = '';
-    let i = 0;
-
-    while (number > 0) {
-        let remainder = number % 1000;
-
-        if (remainder > 0) {
-            let str = '';
-            if (remainder % 100 < 20 && remainder % 100 >= 10) {
-                str = teens[remainder % 10] + ' ';
-            } else {
-                if (remainder % 10 > 0) str = units[remainder % 10] + ' ';
-                if (Math.floor(remainder / 10) % 10 > 1) str = tens[Math.floor(remainder / 10) % 10] + ' ' + str;
-            }
-
-            if (Math.floor(remainder / 100) > 0) {
-                if (Math.floor(remainder / 100) === 1) {
-                    str = 'seratus ' + str;
-                } else {
-                    str = units[Math.floor(remainder / 100)] + ' ratus ' + str;
-                }
-            }
-
-            word = str + thousands[i] + ' ' + word;
-        }
-
-        number = Math.floor(number / 1000);
-        i++;
-    }
-
-    return word.trim() + ' rupiah';
-};
-
-// Fungsi untuk memformat angka dengan titik setiap tiga digit
-const formatNumber = (number) => {
-    return number.toLocaleString('id-ID');
-};
+const midtransClientKey = 'SB-Mid-client-tN5lJrODMKqfbgfh';
 
 const CheckoutPage = () => {
     const location = useLocation();
@@ -66,31 +17,40 @@ const CheckoutPage = () => {
         paymentMethod: 'gopay', // Metode pembayaran default
     });
 
-    // Fungsi untuk menangani perubahan input
+    useEffect(() => {
+        // Load Midtrans Snap script
+        const script = document.createElement('script');
+        script.src = 'https://app.sandbox.midtrans.com/snap/snap.js';
+        script.setAttribute('data-client-key', midtransClientKey);
+        document.body.appendChild(script);
+
+        return () => {
+            document.body.removeChild(script);
+        };
+    }, []);
+
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setOrderDetails({ ...orderDetails, [name]: value });
     };
 
-    // Fungsi untuk memproses pesanan
     const handlePlaceOrder = async () => {
         if (user) {
             try {
+                const totalAmount = selectedItems.reduce((total, item) => total + parseFloat(item.price), 0);
                 const order = {
                     user: {
                         uid: user.uid,
-                        email: user.email
+                        email: user.email,
                     },
                     orderDetails,
-                    totalAmount: totalAmount,
+                    totalAmount,
                 };
 
-                // Mendapatkan token dari Firebase Auth
                 const token = await user.getIdToken();
 
-                // Mengirim permintaan transaksi ke Firebase Cloud Function
                 const response = await axios.post(
-                    'https://simple-notes-firebase-8e9dd.cloudfunctions.net/createTransaction.json?auth=lXYJqqYjWNufQN2OReTueq5MaI53zeEsIbXDh0zy',
+                    'https://simple-notes-firebase-8e9dd.cloudfunctions.net/createTransaction',
                     order,
                     {
                         headers: {
@@ -99,16 +59,13 @@ const CheckoutPage = () => {
                     }
                 );
 
-                const { snapToken } = response.data;
+                const snapToken = response.data.transaction.token;
 
-                // Menjalankan pembayaran menggunakan snapToken
                 window.snap.pay(snapToken, {
                     onSuccess: async function (result) {
                         alert('Pembayaran berhasil!');
-
-                        // Menyimpan data pesanan ke Firebase Realtime Database
                         await axios.post(
-                            'https://simple-notes-firebase-8e9dd-default-rtdb.firebaseio.com/orders.json?auth=lXYJqqYjWNufQN2OReTueq5MaI53zeEsIbXDh0zy', // Ganti dengan URL database Anda
+                            'https://simple-notes-firebase-8e9dd-default-rtdb.firebaseio.com/orders.json?auth=' + token,
                             {
                                 ...order,
                                 transactionStatus: 'completed',
@@ -116,19 +73,17 @@ const CheckoutPage = () => {
                                 timestamp: new Date().toISOString(),
                             }
                         );
-
-                        // Mengatur ulang detail pesanan
                         setOrderDetails({
                             nama: '',
                             nomor: '',
                             alamat: '',
-                            paymentMethod: 'credit_card',
+                            paymentMethod: 'gopay',
                         });
                     },
-                    onPending: function (result) {
+                    onPending: function () {
                         alert('Pembayaran dalam proses');
                     },
-                    onError: function (result) {
+                    onError: function () {
                         alert('Pembayaran gagal');
                     },
                     onClose: function () {
@@ -136,13 +91,14 @@ const CheckoutPage = () => {
                     }
                 });
             } catch (error) {
-                console.error('Error placing order:', error.response || error.message || error);
+                console.error('Error placing order:', error);
                 alert('Terjadi kesalahan dalam proses transaksi');
             }
+        } else {
+            alert('Anda harus login terlebih dahulu untuk melakukan pembayaran.');
         }
     };
 
-    // Menghitung total jumlah harga dari item yang dipilih
     const totalAmount = selectedItems.reduce((total, item) => total + parseFloat(item.price), 0);
 
     return (
@@ -161,10 +117,10 @@ const CheckoutPage = () => {
                     </ul>
                     <div className='flex justify-between mt-4 font-bold'>
                         <span>Total</span>
-                        <span>Rp {formatNumber(totalAmount)}</span>
+                        <span>Rp {totalAmount.toLocaleString('id-ID')}</span>
                     </div>
                     <div className='mt-2 text-black lg:text-right font-poppins '>
-                        <span>{numberToWords(totalAmount)}</span>
+                        <span>{totalAmount.toLocaleString('id-ID', { style: 'currency', currency: 'IDR' })}</span>
                     </div>
                 </div>
                 <div className='bg-white border rounded-lg shadow-lg p-5'>
@@ -207,9 +163,6 @@ const CheckoutPage = () => {
                     </button>
                 </div>
             </div>
-
-            {/* Menyertakan script Midtrans Snap */}
-            <script src={snapSrc} data-client-key={midtransClientKey}></script>
         </div>
     );
 };
