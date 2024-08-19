@@ -50,7 +50,7 @@ const CheckoutPage = () => {
                 const token = await user.getIdToken();
 
                 const response = await axios.post(
-                    'https://simple-notes-firebase-8e9dd.cloudfunctions.net/createTransaction.json?auth=lXYJqqYjWNufQN2OReTueq5MaI53zeEsIbXDh0zy',
+                    'https://simple-notes-firebase-8e9dd.cloudfunctions.net/createTransaction',
                     order,
                     {
                         headers: {
@@ -65,7 +65,7 @@ const CheckoutPage = () => {
                     onSuccess: async function (result) {
                         alert('Pembayaran berhasil!');
                         await axios.post(
-                            'https://simple-notes-firebase-8e9dd-default-rtdb.firebaseio.com/orders.json?auth=lXYJqqYjWNufQN2OReTueq5MaI53zeEsIbXDh0zy' + token,
+                            'https://simple-notes-firebase-8e9dd-default-rtdb.firebaseio.com/orders.json?auth=' + token,
                             {
                                 ...order,
                                 transactionStatus: 'completed',
