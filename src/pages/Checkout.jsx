@@ -24,10 +24,15 @@ const CheckoutPage = () => {
         script.setAttribute('data-client-key', midtransClientKey);
         document.body.appendChild(script);
 
+        // Check if the script has loaded successfully
+        script.onload = () => console.log('Midtrans Snap script loaded successfully');
+        script.onerror = (error) => console.error('Error loading Midtrans Snap script:', error);
+
         return () => {
             document.body.removeChild(script);
         };
     }, []);
+
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
