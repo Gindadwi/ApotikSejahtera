@@ -16,7 +16,7 @@ import SusuAD from './pages/susuAD';
 import Vitamin from './pages/Vitamin';
 import SearchResults from './components/SearchResults';
 import CheckoutPage from './pages/Checkout';
-import LupaPassword from './pages/LupaPassword'
+import LupaPassword from './pages/LupaPassword';
 
 const App = () => {
   return (

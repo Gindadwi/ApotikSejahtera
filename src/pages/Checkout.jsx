@@ -1,110 +1,139 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { getAuth } from 'firebase/auth';
 import axios from 'axios';
-
-const midtransClientKey = 'SB-Mid-client-tN5lJrODMKqfbgfh';
+import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 
 const CheckoutPage = () => {
     const location = useLocation();
     const selectedItems = location.state?.selectedItems || [];
     const auth = getAuth();
     const user = auth.currentUser;
+    const storage = getStorage();
+
     const [orderDetails, setOrderDetails] = useState({
         nama: '',
         nomor: '',
         alamat: '',
-        paymentMethod: 'gopay', // Metode pembayaran default
+        paymentMethod: '',
+        proofOfPayment: null,
     });
 
-    useEffect(() => {
-        // Load Midtrans Snap script
-        const script = document.createElement('script');
-        script.src = 'https://app.sandbox.midtrans.com/snap/snap.js';
-        script.setAttribute('data-client-key', midtransClientKey);
-        document.body.appendChild(script);
-
-        // Check if the script has loaded successfully
-        script.onload = () => console.log('Midtrans Snap script loaded successfully');
-        script.onerror = (error) => console.error('Error loading Midtrans Snap script:', error);
-
-        return () => {
-            document.body.removeChild(script);
-        };
-    }, []);
-
+    const banks = [
+        { name: 'Bank BCA', accountNumber: '1234567890' },
+        { name: 'Bank BRI', accountNumber: '0987654321' },
+        { name: 'Bank Mandiri', accountNumber: '1122334455' },
+    ];
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setOrderDetails({ ...orderDetails, [name]: value });
     };
 
+    const handleFileChange = (e) => {
+        setOrderDetails({ ...orderDetails, proofOfPayment: e.target.files[0] });
+    };
+
+    const uploadProofOfPayment = async (file, user) => {
+        if (!user) {
+            throw new Error('User must be logged in to upload files');
+        }
+
+        const storageRef = ref(storage, `payments/${user.uid}/${file.name}`);
+        const uploadTask = uploadBytesResumable(storageRef, file);
+
+        return new Promise((resolve, reject) => {
+            uploadTask.on('state_changed',
+                (snapshot) => {
+                    // Add progress bar if needed
+                },
+                (error) => {
+                    reject(error);
+                },
+                () => {
+                    getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+                        resolve(downloadURL);
+                    });
+                }
+            );
+        });
+    };
+
     const handlePlaceOrder = async () => {
         if (user) {
             try {
+                const proofOfPaymentUrl = await uploadProofOfPayment(orderDetails.proofOfPayment, user);
+
                 const totalAmount = selectedItems.reduce((total, item) => total + parseFloat(item.price), 0);
                 const order = {
                     user: {
                         uid: user.uid,
                         email: user.email,
                     },
-                    orderDetails,
+                    orderDetails: { ...orderDetails, proofOfPaymentUrl },
                     totalAmount,
+                    transactionStatus: 'pending', // Set initial status as pending
                 };
 
-                const token = await user.getIdToken();
+                const token = await user.getIdToken(true);
 
-                const response = await axios.post(
-                    'https://simple-notes-firebase-8e9dd.cloudfunctions.net/createTransaction',
-                    order,
+                await axios.post(
+                    `https://simple-notes-firebase-8e9dd-default-rtdb.firebaseio.com/orders.json?auth=${token}`,
                     {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
+                        ...order,
+                        timestamp: new Date().toISOString(),
                     }
                 );
 
-                const snapToken = response.data.transaction.token;
+                alert('Pesanan berhasil dibuat.');
 
-                window.snap.pay(snapToken, {
-                    onSuccess: async function (result) {
-                        alert('Pembayaran berhasil!');
-                        await axios.post(
-                            'https://simple-notes-firebase-8e9dd-default-rtdb.firebaseio.com/orders.json?auth=' + token,
-                            {
-                                ...order,
-                                transactionStatus: 'completed',
-                                midtransTransactionId: result.transaction_id,
-                                timestamp: new Date().toISOString(),
-                            }
-                        );
-                        setOrderDetails({
-                            nama: '',
-                            nomor: '',
-                            alamat: '',
-                            paymentMethod: 'gopay',
-                        });
-                    },
-                    onPending: function () {
-                        alert('Pembayaran dalam proses');
-                    },
-                    onError: function () {
-                        alert('Pembayaran gagal');
-                    },
-                    onClose: function () {
-                        alert('Anda menutup jendela pembayaran');
-                    }
+                setOrderDetails({
+                    nama: '',
+                    nomor: '',
+                    alamat: '',
+                    paymentMethod: '',
+                    proofOfPayment: null,
                 });
             } catch (error) {
                 console.error('Error placing order:', error);
-                alert('Terjadi kesalahan dalam proses transaksi');
+                alert('Terjadi kesalahan dalam memproses pesanan');
             }
         } else {
-            alert('Anda harus login terlebih dahulu untuk melakukan pembayaran.');
+            alert('Anda harus login terlebih dahulu untuk melakukan pemesanan.');
         }
     };
 
     const totalAmount = selectedItems.reduce((total, item) => total + parseFloat(item.price), 0);
+
+    const handleCopyAccountNumber = (accountNumber) => {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(accountNumber)
+                .then(() => {
+                    alert('Nomor rekening berhasil disalin!');
+                })
+                .catch((err) => {
+                    console.error('Gagal menyalin teks: ', err);
+                    alert('Gagal menyalin teks.');
+                });
+        } else {
+            // Fallback for browsers without clipboard API
+            const textArea = document.createElement('textarea');
+            textArea.value = accountNumber;
+            textArea.style.position = 'fixed';
+            textArea.style.opacity = '0';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                alert('Nomor rekening berhasil disalin!');
+            } catch (err) {
+                console.error('Gagal menyalin teks: ', err);
+                alert('Gagal menyalin teks.');
+            }
+            document.body.removeChild(textArea);
+        }
+    };
 
     return (
         <div className='container mx-auto p-5'>
@@ -124,7 +153,7 @@ const CheckoutPage = () => {
                         <span>Total</span>
                         <span>Rp {totalAmount.toLocaleString('id-ID')}</span>
                     </div>
-                    <div className='mt-2 text-black lg:text-right font-poppins '>
+                    <div className='mt-2 text-black lg:text-right font-poppins'>
                         <span>{totalAmount.toLocaleString('id-ID', { style: 'currency', currency: 'IDR' })}</span>
                     </div>
                 </div>
@@ -157,6 +186,41 @@ const CheckoutPage = () => {
                             name='alamat'
                             value={orderDetails.alamat}
                             onChange={handleInputChange}
+                            className='w-full px-4 py-2 border rounded-lg'
+                        />
+                    </div>
+                    <div className='mb-4'>
+                        <label className='block text-gray-700'>Pilih Bank</label>
+                        {banks.map((bank, index) => (
+                            <div key={index} className="mb-2">
+                                <button
+                                    type="button"
+                                    className={`w-full py-2 bg-gray-200 text-left px-4 rounded-lg transition-all duration-300 ${orderDetails.paymentMethod === bank.name ? 'bg-gray-300' : ''}`}
+                                    onClick={() => setOrderDetails({ ...orderDetails, paymentMethod: bank.name })}
+                                >
+                                    {bank.name}
+                                </button>
+                                {orderDetails.paymentMethod === bank.name && (
+                                    <div className="mt-2 px-4 py-2 bg-gray-100 rounded-lg flex justify-between items-center">
+                                        <p className="mr-2">Nomor Rekening: {bank.accountNumber}</p>
+                                        <button
+                                            type="button"
+                                            className="text-blue-500"
+                                            onClick={() => handleCopyAccountNumber(bank.accountNumber)}
+                                        >
+                                            Salin
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                    <div className='mb-4'>
+                        <label className='block text-gray-700'>Unggah Bukti Pembayaran</label>
+                        <input
+                            type='file'
+                            accept='image/*'
+                            onChange={handleFileChange}
                             className='w-full px-4 py-2 border rounded-lg'
                         />
                     </div>

@@ -31,7 +31,7 @@ const Home = () => {
       </div>
 
       <div className='mb-10'>
-        <h1 className='text-center font-baloo text-[18px] lg:text-[24px]' >Product Promotion</h1>
+        <h1 className='text-center font-baloo text-[18px] lg:text-[24px]' >Product promotion</h1>
         <CardSlider />
       </div>
 
